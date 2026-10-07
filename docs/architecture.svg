@@ -1,0 +1,153 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 906" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="13">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#475569"/>
+    </marker>
+    <style>
+      .box{fill:#fff;stroke:#94a3b8;stroke-width:1.2}
+      .tg{fill:#fff7ed;stroke:#f97316;stroke-width:1.4}
+      .mcp{fill:#fef3c7;stroke:#d97706;stroke-width:1.4}
+      .agent{fill:#eef2ff;stroke:#6366f1;stroke-width:1.2}
+      .time{fill:#fdf2f8;stroke:#db2777;stroke-width:1.2}
+      .orch{fill:#4f46e5;stroke:#3730a3}
+      .eval{fill:#ecfdf5;stroke:#10b981;stroke-width:1.2}
+      .h{font-weight:600;font-size:14px;fill:#0f172a}
+      .a{font-weight:600;font-size:12.5px;fill:#1e1b4b}
+      .s{fill:#475569;font-size:12px}
+      .w{fill:#fff;font-weight:600;font-size:14px}
+      .ws{fill:#e0e7ff;font-size:12px}
+      line{stroke:#475569;stroke-width:1.4;fill:none;marker-end:url(#a)}
+      line.both{marker-start:url(#a)}
+    </style>
+  </defs>
+  <rect width="1200" height="906" fill="#f8fafc"/>
+  <text x="30" y="38" font-size="22" font-weight="700" fill="#0f172a">OlympicRAG: Agentic GraphRAG on TigerGraph</text>
+  <text x="30" y="60" class="s">Same graph, same LLM (Gemini 3.1 Flash-Lite), three pipelines (RAG, GraphRAG, Agentic GraphRAG), one benchmark harness. Every answer is checked in code before it is released.</text>
+
+  <!-- 1 Ingestion -->
+  <rect x="30" y="80" width="260" height="235" rx="8" class="box"/>
+  <text x="45" y="104" class="h">1 · Ingestion (offline, no LLM)</text>
+  <text x="45" y="126" class="s">corpus.jsonl · 2,951 Wikipedia articles</text>
+  <text x="45" y="148" class="s">• Infobox parser → Event, Games, Sport,</text>
+  <text x="45" y="164" class="s">   Venue, Athlete, Nation</text>
+  <text x="45" y="184" class="s">• prev/next → NEXT_EDITION edges</text>
+  <text x="45" y="200" class="s">   (1,979 of 2,203 events chained)</text>
+  <text x="45" y="220" class="s">• Fact versions → 1,021 Claim vertices</text>
+  <text x="45" y="236" class="s">   (count statements, result changes)</text>
+  <text x="45" y="256" class="s">• Chunker → 22,554 chunks, 512-d local</text>
+  <text x="45" y="272" class="s">   embeddings (potion-retrieval-32M)</text>
+  <text x="45" y="294" class="s">• REST upsert (graph.setup_graph)</text>
+  <line x1="160" y1="315" x2="160" y2="333"/>
+
+  <!-- 2 TigerGraph -->
+  <rect x="30" y="335" width="260" height="546" rx="8" class="tg"/>
+  <text x="45" y="360" class="h">2 · TigerGraph Savanna 4.2</text>
+  <text x="45" y="378" class="s">graph OlympicRAG · vectors + graph</text>
+  <text x="45" y="404" class="s">Doc -HAS_CHUNK→ Chunk (HNSW emb)</text>
+  <text x="45" y="422" class="s">Doc -DESCRIBES→ Event</text>
+  <text x="45" y="440" class="s">Event -IN_GAMES→ Games</text>
+  <text x="45" y="458" class="s">Event -OF_SPORT→ Sport</text>
+  <text x="45" y="476" class="s">Event -AT_VENUE→ Venue</text>
+  <text x="45" y="494" class="s">Event -WON_MEDAL(medal)→ Athlete</text>
+  <text x="45" y="512" class="s">Event -NEXT / PREV_EDITION→ Event</text>
+  <text x="45" y="530" class="s" fill="#be185d">Event -HAS_CLAIM→ Claim(kind, value,</text>
+  <text x="45" y="546" class="s" fill="#be185d">   source, sentence, dates, status)</text>
+  <text x="45" y="564" class="s" fill="#be185d">Claim -SUPERSEDES→ Claim</text>
+  <text x="45" y="596" class="h" font-size="13">Installed GSQL queries</text>
+  <text x="45" y="616" class="s">chunk_search · chunk_search_in_docs</text>
+  <text x="45" y="634" class="s">find_events · events_at_venue</text>
+  <text x="45" y="652" class="s">event_profile · edition_hop</text>
+  <text x="45" y="670" class="s">aggregate_events (accumulators)</text>
+  <text x="45" y="688" class="s">athlete_medals · doc_chunks · catalog</text>
+  <text x="45" y="706" class="s" fill="#be185d">event_claims (versions + supersedes)</text>
+  <text x="45" y="740" class="s">Source policy for facts over time:</text>
+  <text x="45" y="758" class="s">dated change supersedes the original;</text>
+  <text x="45" y="776" class="s">infobox = current official record;</text>
+  <text x="45" y="794" class="s">disagreeing text is reported, never</text>
+  <text x="45" y="812" class="s">dropped or merged</text>
+
+  <!-- Transport -->
+  <rect x="305" y="335" width="80" height="546" rx="8" class="mcp"/>
+  <text transform="translate(338,608) rotate(-90)" text-anchor="middle" class="h" font-size="13">TigerGraph MCP server</text>
+  <text transform="translate(358,608) rotate(-90)" text-anchor="middle" class="s">tigergraph-mcp (stdio) · run_installed_query</text>
+  <text transform="translate(374,608) rotate(-90)" text-anchor="middle" class="s">RESTPP fallback, transport logged per step</text>
+  <line class="both" x1="387" y1="500" x2="408" y2="500"/>
+
+  <!-- Pipelines row -->
+  <rect x="400" y="80" width="375" height="120" rx="8" class="box"/>
+  <text x="414" y="104" class="h">Pipeline 1 · RAG</text>
+  <text x="414" y="126" class="s">question → chunk_search (k=8)</text>
+  <text x="414" y="144" class="s">→ LLM answer + citations</text>
+  <text x="414" y="180" class="s">1 LLM call, fixed</text>
+
+  <rect x="790" y="80" width="380" height="120" rx="8" class="box"/>
+  <text x="804" y="104" class="h">Pipeline 2 · GraphRAG</text>
+  <text x="804" y="126" class="s">entity link → graph retrieval</text>
+  <text x="804" y="144" class="s">+ 1-hop expansion → graph-scoped</text>
+  <text x="804" y="162" class="s">vector search → LLM</text>
+  <text x="804" y="186" class="s">1 LLM call, fixed sequence</text>
+
+
+  <!-- 3 Agentic harness -->
+  <rect x="400" y="228" width="770" height="473" rx="8" fill="#fff" stroke="#6366f1" stroke-width="1.6"/>
+  <text x="414" y="251" class="h">Pipeline 3 · Agentic GraphRAG (harness: state · evidence ledger · budget · stop rule · trace)</text>
+
+  <rect x="414" y="264" width="235" height="120" rx="8" class="orch"/>
+  <text x="428" y="288" class="w">Orchestrator (LLM)</text>
+  <text x="428" y="308" class="ws">question + linked entities + evidence</text>
+  <text x="428" y="325" class="ws">so far + what is still missing</text>
+  <text x="428" y="345" class="ws">→ ONE next agent (JSON + reason)</text>
+  <text x="428" y="365" class="ws">or final_answer with evidence ids</text>
+  <line x1="649" y1="324" x2="662" y2="324"/>
+
+  <rect x="664" y="264" width="245" height="120" rx="8" class="eval"/>
+  <text x="678" y="288" class="h">Evidence evaluator (code)</text>
+  <text x="678" y="308" class="s">whole answer from ONE cited event</text>
+  <text x="678" y="325" class="s">every name and number in evidence</text>
+  <text x="678" y="342" class="s">medal role checked (gold ≠ silver)</text>
+  <text x="678" y="359" class="s">rejected → back with the reason;</text>
+  <text x="678" y="376" class="s">never released: "unknown" + note</text>
+  <line x1="909" y1="324" x2="922" y2="324"/>
+
+  <rect x="924" y="264" width="232" height="120" rx="8" class="time"/>
+  <text x="938" y="288" class="h">Code-written notes</text>
+  <text x="938" y="308" class="s">conflict: both values + sentence</text>
+  <text x="938" y="325" class="s">result changed: dated decision</text>
+  <text x="938" y="342" class="s">ties: every candidate named</text>
+  <text x="938" y="359" class="s">reasoning chain: link → hop →</text>
+  <text x="938" y="376" class="s">answer ← evidence id</text>
+
+    <text x="414" y="402" class="h" font-size="13">Specialised agents (deterministic, over TigerGraph)</text>
+
+  <g>
+    <rect x="414" y="410" width="180" height="48" rx="6" class="agent"/><text x="424" y="430" class="a">entity_linker</text><text x="424" y="447" class="s">year, sport, venue, title</text>
+    <rect x="603" y="410" width="180" height="48" rx="6" class="agent"/><text x="613" y="430" class="a">graph_search</text><text x="613" y="447" class="s">Games → Event, filtered</text>
+    <rect x="792" y="410" width="180" height="48" rx="6" class="agent"/><text x="802" y="430" class="a">venue_events</text><text x="802" y="447" class="s">Venue → Event, date ranked</text>
+    <rect x="981" y="410" width="175" height="48" rx="6" class="agent"/><text x="991" y="430" class="a">event_profile</text><text x="991" y="447" class="s">1-hop neighbourhood</text>
+
+    <rect x="414" y="466" width="180" height="48" rx="6" class="agent"/><text x="424" y="486" class="a">edition_hop</text><text x="424" y="503" class="s">PREV / NEXT edition, n hops</text>
+    <rect x="603" y="466" width="180" height="48" rx="6" class="agent"/><text x="613" y="486" class="a">aggregate</text><text x="613" y="503" class="s">GSQL count / argmax</text>
+    <rect x="792" y="466" width="180" height="48" rx="6" class="agent"/><text x="802" y="486" class="a">athlete_medals</text><text x="802" y="503" class="s">Athlete → Event, code counts</text>
+    <rect x="981" y="466" width="175" height="48" rx="6" class="time"/><text x="991" y="486" class="a">fact_history</text><text x="991" y="503" class="s">Claims + SUPERSEDES</text>
+
+    <rect x="414" y="522" width="180" height="48" rx="6" class="agent"/><text x="424" y="542" class="a">similarity_search</text><text x="424" y="559" class="s">HNSW over all chunks</text>
+    <rect x="603" y="522" width="180" height="48" rx="6" class="agent"/><text x="613" y="542" class="a">scoped_similarity</text><text x="613" y="559" class="s">vectors inside graph docs</text>
+    <rect x="792" y="522" width="180" height="48" rx="6" class="agent"/><text x="802" y="542" class="a">find_documents</text><text x="802" y="559" class="s">title match, years must agree</text>
+    <rect x="981" y="522" width="175" height="48" rx="6" class="agent"/><text x="991" y="542" class="a">read_document</text><text x="991" y="559" class="s">ordered chunks, keyword</text>
+    <rect x="414" y="578" width="369" height="48" rx="6" class="orch"/><text x="424" y="598" class="w" font-size="12.5">multi_hop (multi-hop reasoning)</text><text x="424" y="615" class="ws">exact start → planned hops → evidence per hop</text>
+    <rect x="792" y="578" width="364" height="48" rx="6" class="eval"/><text x="802" y="598" class="a">ambiguous start? no hop, candidates returned</text><text x="802" y="615" class="s">missing edition? chain stops and says where</text>
+  </g>
+  <text x="414" y="654" class="s">Multi-hop: each observation adds evidence ids to the ledger and the orchestrator picks the next hop from what is missing</text>
+  <text x="414" y="672" class="s">(venue + date → event → previous edition → medallist; athlete → all events → count; graph empty → find the article → read it).</text>
+  <text x="414" y="690" class="s">Stops when the evaluator accepts (evidence_sufficient), after two rejections (withheld) or at the 8-step budget.</text>
+
+  <!-- 5 Benchmark -->
+  <rect x="400" y="716" width="770" height="165" rx="8" class="box"/>
+  <text x="414" y="740" class="h">Benchmark, dashboard, submission</text>
+  <text x="414" y="762" class="s">Sets: 100 public · 50 hidden · 36 hard multi-step · 18 over time · 12 films outside the graph (gold by code)</text>
+  <text x="414" y="782" class="s">Accuracy: normalised match, then LLM judge (PASS/FAIL + completeness) · citation precision and recall against gold documents</text>
+  <text x="414" y="802" class="s">Grounding check on every answer of every pipeline, no gold needed: supported / combines events / not in evidence / wrong role</text>
+  <text x="414" y="822" class="s">Tokens: context, input, output, per correct answer · LLM and tool calls · active time · transport per step (MCP or RESTPP)</text>
+  <text x="414" y="842" class="s">Agent traces: every step with reason, args, ms, tokens and evidence; stop reason; conflict and change reporting on the time set</text>
+  <text x="414" y="866" class="s">→ results/metrics.json · dashboard · submission/ (hidden-set answers, citations, grounding verdicts, traces)</text>
+</svg>

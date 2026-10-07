@@ -1,0 +1,42 @@
+// OlympicRAG graph: graph-local types (no clash with other graphs on the same Savanna workspace).
+USE GRAPH OlympicRAG
+CREATE SCHEMA_CHANGE JOB olympic_schema FOR GRAPH OlympicRAG {
+  ADD VERTEX Doc (PRIMARY_ID id STRING, title STRING, url STRING, kind STRING, tokens INT) WITH primary_id_as_attribute="true";
+  ADD VERTEX Chunk (PRIMARY_ID id STRING, doc_id STRING, idx INT, text STRING) WITH primary_id_as_attribute="true";
+  ADD VERTEX Event (PRIMARY_ID id STRING, title STRING, title_norm STRING, sport STRING, sport_norm STRING,
+                    event STRING, event_norm STRING, year INT, season STRING, venue STRING, venue_norm STRING,
+                    date_text STRING, date_norm STRING, competitors INT, nations INT,
+                    gold STRING, silver STRING, bronze STRING, gold_noc STRING, silver_noc STRING, bronze_noc STRING,
+                    win_value STRING) WITH primary_id_as_attribute="true";
+  ADD VERTEX Games (PRIMARY_ID id STRING, year INT, season STRING) WITH primary_id_as_attribute="true";
+  ADD VERTEX Sport (PRIMARY_ID id STRING, name STRING) WITH primary_id_as_attribute="true";
+  ADD VERTEX Venue (PRIMARY_ID id STRING, name STRING) WITH primary_id_as_attribute="true";
+  ADD VERTEX Athlete (PRIMARY_ID id STRING, name STRING) WITH primary_id_as_attribute="true";
+  ADD VERTEX Nation (PRIMARY_ID id STRING) WITH primary_id_as_attribute="true";
+
+  ADD UNDIRECTED EDGE HAS_CHUNK (FROM Doc, TO Chunk);
+  ADD UNDIRECTED EDGE DESCRIBES (FROM Doc, TO Event);
+  ADD UNDIRECTED EDGE IN_GAMES (FROM Event, TO Games);
+  ADD UNDIRECTED EDGE OF_SPORT (FROM Event, TO Sport);
+  ADD UNDIRECTED EDGE AT_VENUE (FROM Event, TO Venue);
+  ADD UNDIRECTED EDGE WON_MEDAL (FROM Event, TO Athlete, medal STRING);
+  ADD UNDIRECTED EDGE MEDAL_FOR (FROM Event, TO Nation, medal STRING);
+  ADD DIRECTED EDGE NEXT_EDITION (FROM Event, TO Event) WITH REVERSE_EDGE="PREV_EDITION";
+  ADD DIRECTED EDGE NEXT_GAMES (FROM Games, TO Games) WITH REVERSE_EDGE="PREV_GAMES";
+}
+RUN SCHEMA_CHANGE JOB olympic_schema
+DROP JOB olympic_schema
+CREATE SCHEMA_CHANGE JOB olympic_vectors FOR GRAPH OlympicRAG {
+  ALTER VERTEX Chunk ADD VECTOR ATTRIBUTE emb(DIMENSION=512, METRIC="COSINE");
+}
+RUN SCHEMA_CHANGE JOB olympic_vectors
+DROP JOB olympic_vectors
+// Reasoning over time: versions of facts (official record, article statements, result changes)
+CREATE SCHEMA_CHANGE JOB olympic_claims FOR GRAPH OlympicRAG {
+  ADD VERTEX Claim (PRIMARY_ID id STRING, event_id STRING, kind STRING, attribute STRING, claim_value STRING,
+                    source STRING, sentence STRING, dates STRING, status STRING) WITH primary_id_as_attribute="true";
+  ADD UNDIRECTED EDGE HAS_CLAIM (FROM Event, TO Claim);
+  ADD DIRECTED EDGE SUPERSEDES (FROM Claim, TO Claim) WITH REVERSE_EDGE="SUPERSEDED_BY";
+}
+RUN SCHEMA_CHANGE JOB olympic_claims
+DROP JOB olympic_claims

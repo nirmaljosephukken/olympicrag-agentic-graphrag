@@ -1,0 +1,363 @@
+<title>OlympicRAG Benchmark</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: lab-report column (max 1120px): verdict line, scorecard table, by-type charts, payoff matrix, agent behaviour, question explorer */
+:root {
+  --bg: #f6f7f8; --surface: #ffffff; --ink: #121417; --ink-2: #4a4f57; --ink-3: #6f747c;
+  --line: #e1e4e8; --line-2: #eef0f2; --accent: #1f6f5c;
+  --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --s4: #eda100;
+  --pass: #1f7a3d; --pass-bg: #e3f3e8; --fail: #b3261e; --fail-bg: #fbe7e6; --warn: #8a5a00; --warn-bg: #fdf1d6;
+  --f-display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --f-body: "IBM Plex Sans", "Segoe UI", Helvetica, Arial, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #141618; --surface: #1c1f22; --ink: #f2f3f4; --ink-2: #c3c7cc; --ink-3: #959aa1;
+  --line: #30343a; --line-2: #262a2e; --accent: #4cc3a2;
+  --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500;
+  --pass: #6fd38f; --pass-bg: #1d3325; --fail: #ff8a80; --fail-bg: #3a1f1d; --warn: #f2c35b; --warn-bg: #3a2f17;
+  color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #141618; --surface: #1c1f22; --ink: #f2f3f4; --ink-2: #c3c7cc; --ink-3: #959aa1;
+  --line: #30343a; --line-2: #262a2e; --accent: #4cc3a2;
+  --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500;
+  --pass: #6fd38f; --pass-bg: #1d3325; --fail: #ff8a80; --fail-bg: #3a1f1d; --warn: #f2c35b; --warn-bg: #3a2f17;
+  color-scheme: dark; }
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 15px; line-height: 1.5; margin: 0; }
+.wrap { max-width: 1120px; margin: 0 auto; padding-inline: 20px; padding-block: 36px 64px; display: grid; gap: 40px; }
+h1, h2, h3 { font-family: var(--f-display); text-wrap: balance; margin: 0; letter-spacing: -0.01em; }
+h1 { font-size: clamp(30px, 4.6vw, 46px); font-weight: 800; line-height: 1.05; }
+h2 { font-size: 22px; font-weight: 700; }
+h3 { font-size: 15px; font-weight: 700; }
+.eyebrow { font-family: var(--f-mono); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); }
+.lede { font-size: 18px; color: var(--ink-2); max-width: 68ch; margin: 0; }
+.lede b { color: var(--ink); }
+.muted { color: var(--ink-3); }
+.mono, .num { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+section { display: grid; gap: 16px; }
+.sec-head { display: grid; gap: 4px; }
+.sec-head p { margin: 0; color: var(--ink-2); max-width: 75ch; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 18px; min-width: 0; }
+.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; }
+.scroll { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 14px; }
+th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line-2); vertical-align: top; }
+th { font-size: 12px; font-weight: 600; color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.05em; white-space: nowrap; }
+td.num, th.num { text-align: right; }
+.score td.num { font-size: 15px; }
+.best { font-weight: 600; color: var(--ink); }
+.key { display: inline-flex; align-items: center; gap: 8px; font-weight: 600; white-space: nowrap; }
+.sw { width: 10px; height: 10px; border-radius: 3px; flex: none; }
+.legend { display: flex; flex-wrap: wrap; gap: 16px; font-size: 13px; color: var(--ink-2); }
+.chip { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
+.chip.pass { background: var(--pass-bg); color: var(--pass); }
+.chip.fail { background: var(--fail-bg); color: var(--fail); }
+.chip.warn { background: var(--warn-bg); color: var(--warn); }
+.chip.neutral { background: var(--line-2); color: var(--ink-2); }
+svg text { fill: var(--ink-2); font-family: var(--f-body); font-size: 12px; }
+svg .axis { stroke: var(--line); }
+svg .grid { stroke: var(--line-2); }
+.tip { position: fixed; pointer-events: none; background: var(--ink); color: var(--bg); font-size: 12px; padding: 6px 9px; border-radius: 6px; z-index: 10; max-width: 280px; }
+.bars rect { transition: opacity .12s; }
+.bars rect:hover { opacity: .8; }
+.payoff td:first-child { font-weight: 600; text-transform: capitalize; }
+.delta-pos { color: var(--pass); } .delta-neg { color: var(--fail); }
+.toolrow { display: grid; grid-template-columns: 150px 1fr 90px; gap: 10px; align-items: center; font-size: 13px; }
+.toolrow .bar { height: 10px; border-radius: 0 4px 4px 0; background: var(--s3); }
+.tools { display: grid; gap: 8px; }
+.paths { display: grid; gap: 6px; font-size: 13px; }
+.paths div { display: flex; justify-content: space-between; gap: 12px; border-bottom: 1px solid var(--line-2); padding-bottom: 6px; }
+.paths code { font-family: var(--f-mono); font-size: 12px; color: var(--ink-2); overflow-wrap: anywhere; }
+.controls { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+select, button, input[type=search] { font: inherit; font-size: 14px; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; }
+button { cursor: pointer; }
+button[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.qrow { cursor: pointer; }
+.qrow:hover td { background: var(--line-2); }
+.qtext { max-width: 42ch; }
+.ans { font-size: 13px; max-width: 24ch; overflow-wrap: anywhere; }
+.trace { display: grid; gap: 8px; padding: 6px 0 4px; }
+.step { display: grid; grid-template-columns: 28px 1fr; gap: 10px; font-size: 13px; }
+.step .n { font-family: var(--f-mono); color: var(--ink-3); }
+.step .who { font-weight: 600; }
+.step .meta { font-family: var(--f-mono); font-size: 12px; color: var(--ink-3); }
+.step .obs { font-family: var(--f-mono); font-size: 12px; color: var(--ink-2); white-space: pre-wrap; overflow-wrap: anywhere; }
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+.fact { border-top: 2px solid var(--line); padding-top: 10px; display: grid; gap: 2px; }
+.fact .v { font-family: var(--f-display); font-size: 26px; font-weight: 700; }
+.fact .l { font-size: 13px; color: var(--ink-2); }
+footer { font-size: 13px; color: var(--ink-3); }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+@media (max-width: 560px) { .toolrow { grid-template-columns: 110px 1fr 70px; } th, td { padding: 8px; } }
+</style>
+
+<div class="wrap">
+  <header style="display:grid;gap:12px">
+    <div class="eyebrow">TigerGraph Agentic GraphRAG Hackathon · Round 1 benchmark</div>
+    <h1>OlympicRAG Benchmark</h1>
+    <p class="lede" id="thesis"></p>
+    <div class="legend" id="legend"></div>
+  </header>
+
+  <section>
+    <div class="sec-head"><h2>Scorecard</h2>
+      <p>100 public questions, each answered by all three pipelines on the same TigerGraph graph and the same LLM. Accuracy is judged against the ground truth; citation recall measures how many gold documents the answer cites.</p></div>
+    <div class="panel scroll"><table class="score" id="scorecard"></table></div>
+  </section>
+
+  <section>
+    <div class="sec-head"><h2>Grounding check</h2>
+      <p>Every answer is checked in code against the evidence it cites. It counts as supported only if all of it comes from one cited event or source. An answer fails if it combines facts from different events, contains a name or number no cited evidence states, or names a non-gold medallist as the winner. This needs no ground truth, so it also covers the hidden set.</p></div>
+    <div class="panel scroll"><table id="grounding"></table></div>
+  </section>
+
+  <section>
+    <div class="sec-head"><h2>By question type</h2>
+      <p>Same questions, split by what they ask for. The left chart shows how often each pipeline is right; the right shows what it spends per question.</p></div>
+    <div class="grid2">
+      <div class="panel"><h3>Accuracy (% correct)</h3><div id="accChart"></div></div>
+      <div class="panel"><h3>Tokens per question</h3><div id="tokChart"></div></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><h2>When does the agent pay off?</h2>
+      <p>For each question type, the agent is compared with the cheaper of the two single-pass pipelines that scores best. A gain of at least 10 points marks the type as one that needs an agent.</p></div>
+    <div class="panel scroll"><table class="payoff" id="payoff"></table></div>
+  </section>
+
+  <section id="hardSec">
+    <div class="sec-head"><h2>Harder multi-step questions (our own set)</h2>
+      <p>36 questions built from the same corpus that need more than one step: two editions back (the 1994 Winter Games break the four-year pattern), venue + date then the previous edition, an athlete's gold count, comparing two events, the next Games, a silver medallist, and five events whose articles have no infobox, so the graph has nothing and the agent must switch to reading the article. Every gold answer is computed by code from the parsed infoboxes or read from the article text with the quote recorded; none is written by an LLM.</p></div>
+    <div class="panel scroll"><table id="hardTable"></table></div>
+    <div class="panel"><h3 style="margin-bottom:12px">Agent paths on the harder set</h3><div class="paths" id="hardPaths"></div></div>
+  </section>
+
+  <section id="openSec">
+    <div class="sec-head"><h2>Questions outside the graph: films (our own set)</h2>
+      <p>The corpus also holds 546 film articles that are not in the graph. These 12 questions describe a film without naming it (year, director, a star), so the graph has nothing and title matching cannot find it: the article has to be found by meaning with similarity search, then read. Gold answers come from the film infobox, taken by code.</p></div>
+    <div class="panel scroll"><table id="openTable"></table></div>
+    <div class="panel"><h3 style="margin-bottom:12px">Agent paths on these questions</h3><div class="paths" id="openPaths"></div></div>
+  </section>
+
+  <section id="timeSec">
+    <div class="sec-head"><h2>Reasoning over time: conflicting and superseded facts</h2>
+      <p>Some facts in the corpus have more than one version. A medallist "originally won" and was later disqualified, or the infobox and the article text give different competitor counts. Ingestion stores each version as a Claim vertex in TigerGraph, linked to its event and to the claim it supersedes (code only, no LLM). The <code>fact_history</code> agent reads them, and the harness writes a note that names both versions. 18 questions test this: the original winner, the current one, the year of the decision, a medal left vacant, and five count conflicts where the official record must be used and the disagreement reported.</p></div>
+    <div class="facts" id="timeFacts"></div>
+    <div class="panel scroll"><table id="timeTable"></table></div>
+    <div class="panel scroll"><table id="timeQs"></table></div>
+  </section>
+
+  <section>
+    <div class="sec-head"><h2>How the agent investigates</h2>
+      <p>Which specialised agents the orchestrator called, how often they returned evidence, the routes it took, and why it stopped.</p></div>
+    <div class="facts" id="agentFacts"></div>
+    <div class="grid2">
+      <div class="panel"><h3 style="margin-bottom:12px">Specialised agents invoked</h3><div class="tools" id="tools"></div></div>
+      <div class="panel"><h3 style="margin-bottom:12px">Most common investigation paths</h3><div class="paths" id="paths"></div></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><h2>Question explorer</h2>
+      <p>Every public question with all three answers. Select a row to open the agent's full trace: each decision, the tool it called, time and tokens per step, and what came back.</p></div>
+    <div class="controls">
+      <label for="qtype" class="muted">Type</label>
+      <select id="qtype"><option value="">All types</option></select>
+      <button id="disagree" aria-pressed="false">Pipelines disagree</button>
+      <input id="search" type="search" placeholder="Search questions" aria-label="Search questions">
+      <span class="muted" id="qcount"></span>
+    </div>
+    <div class="panel scroll"><table id="qtable"></table></div>
+  </section>
+
+  <section id="hiddenSec">
+    <div class="sec-head"><h2>Hidden set (50 questions)</h2>
+      <p>Answers, token counts and full agent traces for the 50 held-out questions are submitted as raw outputs in <span class="mono">results/hidden_*.jsonl</span>; the organisers score them.</p></div>
+    <div class="panel scroll"><table id="hidden"></table></div>
+  </section>
+
+  <footer id="foot"></footer>
+</div>
+<div class="tip" id="tip" hidden></div>
+
+<script>
+const D = /*__DATA__*/null;
+const P_ALL = [["rag","RAG","--s1"],["graphrag","GraphRAG","--s2"],["agentic","Agentic GraphRAG","--s3"]];
+const P = P_ALL.filter(p => D.pipelines[p[0]]);
+const css = v => `var(${v})`;
+const pct = x => (x * 100).toFixed(0) + "%";
+const fmt = x => Math.round(x).toLocaleString("en-US");
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const tip = document.getElementById("tip");
+function showTip(e, html) { tip.innerHTML = html; tip.hidden = false; const x = Math.min(e.clientX + 14, innerWidth - 290); tip.style.left = x + "px"; tip.style.top = (e.clientY + 14) + "px"; }
+function hideTip() { tip.hidden = true; }
+
+// thesis + legend
+const m = D.pipelines, ag = m.agentic, gr = m.graphrag, rg = m.rag;
+document.getElementById("thesis").innerHTML = ag ? `Agentic GraphRAG answered <b>${pct(ag.accuracy)}</b> of the public questions correctly, against <b>${pct(gr.accuracy)}</b> for GraphRAG and <b>${pct(rg.accuracy)}</b> for RAG, using <b>${fmt(ag.avg_total_tokens)}</b> tokens per question (RAG used ${fmt(rg.avg_total_tokens)}). It spends ${fmt(ag.tokens_per_correct)} tokens per correct answer, RAG spends ${fmt(rg.tokens_per_correct)}.` : "";
+document.getElementById("legend").innerHTML = P.map(p => `<span class="key"><span class="sw" style="background:${css(p[2])}"></span>${p[1]}</span>`).join("");
+
+// scorecard
+const cols = [["accuracy","Accuracy",pct,1],["completeness","Completeness",x=>x.toFixed(2),1],["citation_recall","Citation recall",x=>x.toFixed(2),1],
+  ["avg_total_tokens","Tokens / question",fmt,-1],["avg_context_tokens","Context tokens",fmt,-1],["tokens_per_correct","Tokens / correct answer",fmt,-1],
+  ["avg_llm_calls","LLM calls",x=>x.toFixed(1),-1],["avg_tool_calls","Tool calls",x=>x.toFixed(1),0],["avg_latency_s","Active time (s)",x=>x.toFixed(1),-1]];
+const sc = document.getElementById("scorecard");
+sc.innerHTML = `<thead><tr><th>Pipeline</th>${cols.map(c => `<th class="num">${c[1]}</th>`).join("")}</tr></thead><tbody>` +
+  P.map(p => `<tr><td><span class="key"><span class="sw" style="background:${css(p[2])}"></span>${p[1]}</span></td>` + cols.map(c => {
+    const vals = P.map(q => m[q[0]][c[0]]); const v = m[p[0]][c[0]];
+    const best = c[3] === 0 ? false : (c[3] > 0 ? v === Math.max(...vals) : v === Math.min(...vals));
+    return `<td class="num${best ? " best" : ""}">${c[2](v)}</td>`; }).join("") + "</tr>").join("") + "</tbody>";
+
+// grounding table
+const G = D.grounding || {};
+document.getElementById("grounding").innerHTML = `<thead><tr><th>Set</th><th>Pipeline</th><th class="num">Supported by one source</th><th class="num">Combines events</th><th class="num">Not in evidence</th><th class="num">Wrong medal role</th><th class="num">Unknown</th><th class="num">Notes written</th></tr></thead><tbody>` +
+  ["public", "hidden", "hard", "time", "open"].filter(k => G[k]).flatMap(k => P.filter(p => G[k][p[0]]).map(p => { const g = G[k][p[0]];
+    const bad = v => `<td class="num${v ? " delta-neg" : ""}">${v}</td>`;
+    return `<tr><td class="muted">${k} (${g.n})</td><td><span class="key"><span class="sw" style="background:${css(p[2])}"></span>${p[1]}</span></td>` +
+      `<td class="num best">${g.supported} <span class="muted">(${pct(g.supported / g.n)})</span></td>${bad(g.combined)}${bad(g.unsupported)}${bad(g.wrong_role)}<td class="num">${g.unknown}</td><td class="num">${g.ambiguity_notes}</td></tr>`; })).join("") + "</tbody>";
+
+// grouped horizontal bars
+function grouped(el, field, fmtv, maxv) {
+  const types = Object.keys(D.by_qtype);
+  const W = 520, rowH = 16, gap = 2, groupGap = 18, left = 96, right = 56, top = 8;
+  const gh = P.length * rowH + (P.length - 1) * gap;
+  const H = top + types.length * (gh + groupGap) + 22;
+  const raw = Math.max(...types.flatMap(t => P.map(p => D.by_qtype[t][p[0]]?.[field] || 0)));
+  const step = maxv ? 0.25 : [500, 1000, 2000, 2500, 5000, 10000].find(s => raw / s <= 5) || 20000;
+  const mx = maxv || Math.ceil(raw / step) * step;
+  const x = v => left + (W - left - right) * v / mx;
+  let s = `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="${field} by question type"><g>`;
+  const ticks = []; for (let t = 0; t <= mx + 1e-9; t += step) ticks.push(t);
+  ticks.forEach(t => { s += `<line class="grid" x1="${x(t)}" x2="${x(t)}" y1="${top}" y2="${H - 22}"/><text x="${x(t)}" y="${H - 6}" text-anchor="middle">${maxv === 1 ? pct(t) : fmt(t)}</text>`; });
+  s += `</g><g class="bars">`;
+  types.forEach((t, i) => {
+    const y0 = top + i * (gh + groupGap);
+    s += `<text x="${left - 10}" y="${y0 + gh / 2 + 4}" text-anchor="end" style="fill:var(--ink);font-weight:600">${t.replace("_", "-")}</text>`;
+    P.forEach((p, j) => {
+      const d = D.by_qtype[t][p[0]]; if (!d) return; const v = d[field]; const y = y0 + j * (rowH + gap); const w = Math.max(2, x(v) - left);
+      s += `<rect x="${left}" y="${y}" width="${w}" height="${rowH}" rx="4" fill="${css(p[2])}" data-tip="<b>${p[1]}</b> · ${t}<br>${fmtv(v)} · n=${d.n}"/>`;
+      s += `<text x="${left + w + 6}" y="${y + rowH - 4}" class="num" style="font-size:11px">${fmtv(v)}</text>`;
+    });
+  });
+  s += `<line class="axis" x1="${left}" x2="${left}" y1="${top}" y2="${H - 22}"/></g></svg>`;
+  el.innerHTML = s;
+  el.querySelectorAll("rect[data-tip]").forEach(r => { r.addEventListener("mousemove", e => showTip(e, r.dataset.tip)); r.addEventListener("mouseleave", hideTip); });
+}
+grouped(document.getElementById("accChart"), "accuracy", pct, 1);
+grouped(document.getElementById("tokChart"), "avg_total_tokens", fmt);
+
+// payoff
+const pay = document.getElementById("payoff");
+pay.innerHTML = `<thead><tr><th>Question type</th><th class="num">n</th>${P.map(p => `<th class="num">${p[1]}</th>`).join("")}<th class="num">Agent gain</th><th class="num">Extra tokens</th><th>Verdict</th></tr></thead><tbody>` +
+  Object.entries(D.by_qtype).map(([t, r]) => {
+    const simple = ["rag", "graphrag"].filter(k => r[k]).sort((a, b) => (r[b].accuracy - r[a].accuracy) || (r[a].avg_total_tokens - r[b].avg_total_tokens))[0];
+    const a = r.agentic, b = r[simple]; if (!a || !b) return "";
+    const gain = a.accuracy - b.accuracy, extra = a.avg_total_tokens - b.avg_total_tokens;
+    const verdict = gain >= 0.1 ? `<span class="chip pass">Agent needed</span>` : gain <= -0.05 ? `<span class="chip fail">Agent hurts</span>` : `<span class="chip neutral">${simple === "rag" ? "RAG" : "GraphRAG"} is enough</span>`;
+    return `<tr><td>${t.replace("_", "-")}</td><td class="num">${a.n}</td>${P.map(p => `<td class="num">${pct(r[p[0]].accuracy)}</td>`).join("")}` +
+      `<td class="num ${gain > 0 ? "delta-pos" : gain < 0 ? "delta-neg" : ""}">${gain > 0 ? "+" : ""}${(gain * 100).toFixed(0)} pts <span class="muted">vs ${simple === "rag" ? "RAG" : "GraphRAG"}</span></td>` +
+      `<td class="num">${extra > 0 ? "+" : ""}${fmt(extra)}</td><td>${verdict}</td></tr>`; }).join("") + "</tbody>";
+
+// harder set
+const HD = D.hard;
+if (!HD) document.getElementById("hardSec").hidden = true;
+else {
+  const HP = P_ALL.filter(p => HD.pipelines[p[0]]);
+  const types = Object.keys(HD.by_qtype);
+  document.getElementById("hardTable").innerHTML = `<thead><tr><th>Question type</th><th class="num">n</th>${HP.map(p => `<th class="num">${p[1]}</th>`).join("")}</tr></thead><tbody>` +
+    types.map(t => `<tr><td>${t.replace(/_/g, " ")}</td><td class="num">${HD.by_qtype[t][HP[0][0]]?.n ?? ""}</td>${HP.map(p => { const x = HD.by_qtype[t][p[0]]; return `<td class="num">${x ? pct(x.accuracy) : ""} <span class="muted" style="font-size:12px">${x ? fmt(x.avg_total_tokens) + " tok" : ""}</span></td>`; }).join("")}</tr>`).join("") +
+    `<tr><td class="best">All</td><td class="num best">${HD.pipelines[HP[0][0]].n}</td>${HP.map(p => { const x = HD.pipelines[p[0]]; return `<td class="num best">${pct(x.accuracy)} <span class="muted" style="font-size:12px">${fmt(x.avg_total_tokens)} tok · ${x.avg_llm_calls.toFixed(1)} LLM</span></td>`; }).join("")}</tr></tbody>`;
+  document.getElementById("hardPaths").innerHTML = Object.entries(HD.agentic_paths || {}).slice(0, 10).map(([k, v]) => `<div><code>${esc(k.replace(/check_grounding/g, "verify"))}</code><span class="num">${v}</span></div>`).join("");
+}
+
+// questions outside the graph
+const OP = D.open;
+if (!OP) document.getElementById("openSec").hidden = true;
+else {
+  const XP = P_ALL.filter(p => OP.pipelines[p[0]]);
+  const types = Object.keys(OP.by_qtype);
+  document.getElementById("openTable").innerHTML = `<thead><tr><th>Question type</th><th class="num">n</th>${XP.map(p => `<th class="num">${p[1]}</th>`).join("")}</tr></thead><tbody>` +
+    types.map(t => `<tr><td>${t.replace(/_/g, " ")}</td><td class="num">${OP.by_qtype[t][XP[0][0]]?.n ?? ""}</td>${XP.map(p => { const x = OP.by_qtype[t][p[0]]; return `<td class="num">${x ? pct(x.accuracy) : ""}</td>`; }).join("")}</tr>`).join("") +
+    `<tr><td class="best">All</td><td class="num best">${OP.pipelines[XP[0][0]].n}</td>${XP.map(p => { const x = OP.pipelines[p[0]]; return `<td class="num best">${pct(x.accuracy)} <span class="muted" style="font-size:12px">${fmt(x.avg_total_tokens)} tok</span></td>`; }).join("")}</tr></tbody>`;
+  document.getElementById("openPaths").innerHTML = Object.entries(OP.agentic_paths || {}).slice(0, 8).map(([k, v]) => `<div><code>${esc(k.replace(/check_grounding/g, "verify"))}</code><span class="num">${v}</span></div>`).join("");
+}
+
+// reasoning over time
+const TM = D.time;
+if (!TM) document.getElementById("timeSec").hidden = true;
+else {
+  const TP = P_ALL.filter(p => TM.pipelines[p[0]]);
+  const tr = D.transports || {}; const nT = Object.values(tr).reduce((a, b) => a + b, 0);
+  const best = TM.pipelines.agentic;
+  document.getElementById("timeFacts").innerHTML = [
+    [best ? pct(best.accuracy) : "", "agent accuracy on the reasoning-over-time set"],
+    [best?.conflict_reported ?? "", "count conflicts where BOTH versions reach the user (answer or note)"],
+    [best?.change_noted ?? "", "result-change questions answered with a note on the dated change"],
+    [nT ? pct((tr.mcp || 0) / nT) : "", "of logged graph steps served through the TigerGraph MCP server"],
+  ].map(f => `<div class="fact"><span class="v num">${f[0]}</span><span class="l">${f[1]}</span></div>`).join("");
+  const types = Object.keys(TM.by_qtype);
+  document.getElementById("timeTable").innerHTML = `<thead><tr><th>Question type</th><th class="num">n</th>${TP.map(p => `<th class="num">${p[1]}</th>`).join("")}</tr></thead><tbody>` +
+    types.map(t => `<tr><td>${t.replace(/_/g, " ")}</td><td class="num">${TM.by_qtype[t][TP[0][0]]?.n ?? ""}</td>${TP.map(p => { const x = TM.by_qtype[t][p[0]]; return `<td class="num">${x ? pct(x.accuracy) : ""}</td>`; }).join("")}</tr>`).join("") +
+    `<tr><td class="best">All</td><td class="num best">${TM.pipelines[TP[0][0]].n}</td>${TP.map(p => `<td class="num best">${pct(TM.pipelines[p[0]].accuracy)} <span class="muted" style="font-size:12px">${fmt(TM.pipelines[p[0]].avg_total_tokens)} tok</span></td>`).join("")}</tr>` +
+    `<tr><td>Conflict reported (both values shown)</td><td></td>${TP.map(p => `<td class="num">${TM.pipelines[p[0]].conflict_reported}</td>`).join("")}</tr>` +
+    `<tr><td>Result change noted</td><td></td>${TP.map(p => `<td class="num">${TM.pipelines[p[0]].change_noted}</td>`).join("")}</tr></tbody>`;
+  const k = "agentic";
+  document.getElementById("timeQs").innerHTML = `<thead><tr><th>Question</th><th>Expected</th><th>Agent answer</th><th>Code-written note</th></tr></thead><tbody>` +
+    TM.per_question.map(q => { const x = q[k] || {}; return `<tr><td><span class="muted">${esc(q.qtype.replace(/_/g, " "))}</span><br>${esc(q.question)}</td><td>${esc(q.gold.join(" | "))}</td><td>${verdictChip(x)} ${esc(x.answer)}</td><td class="muted" style="font-size:12px">${esc((x.notes || []).join(" "))}</td></tr>`; }).join("") + "</tbody>";
+}
+
+// agent behaviour
+const B = D.agentic_behaviour || {};
+const stops = B.stop_reasons || {}; const nAg = ag ? ag.n : 0;
+document.getElementById("agentFacts").innerHTML = [
+  [B.avg_steps?.toFixed(1), "trace steps per question (decisions, tool calls and checks)"],
+  [ag?.avg_llm_calls.toFixed(1), "LLM calls per question; RAG and GraphRAG always use 1"],
+  [`${B.questions_with_strategy_change ?? 0}`, "questions where the agent changed strategy after an empty result"],
+  [`${stops["evidence_sufficient"] ?? 0} / ${nAg}`, "stopped because the evidence evaluator confirmed the answer in cited evidence"],
+].map(f => `<div class="fact"><span class="v num">${f[0]}</span><span class="l">${f[1]}</span></div>`).join("");
+const tu = Object.entries(B.tool_usage || {}).sort((a, b) => b[1].calls - a[1].calls); const tmax = Math.max(1, ...tu.map(t => t[1].calls));
+document.getElementById("tools").innerHTML = tu.map(([k, v]) => `<div class="toolrow"><span class="mono" style="font-size:12px">${k}</span><div style="display:flex;align-items:center"><div class="bar" style="width:${100 * v.calls / tmax}%" data-tip="<b>${k}</b><br>${v.calls} calls · ${v.avg_ms} ms avg · evidence found ${pct(v.hit_rate)}"></div></div><span class="num muted" style="font-size:12px;text-align:right">${v.calls} · ${pct(v.hit_rate)}</span></div>`).join("") +
+  `<div class="muted" style="font-size:12px">calls · share that returned evidence</div>`;
+document.querySelectorAll(".toolrow .bar").forEach(r => { r.addEventListener("mousemove", e => showTip(e, r.dataset.tip)); r.addEventListener("mouseleave", hideTip); });
+document.getElementById("paths").innerHTML = Object.entries(B.paths || {}).slice(0, 8).map(([k, v]) => `<div><code>${esc(k.replace(/check_grounding/g, "verify"))}</code><span class="num">${v}</span></div>`).join("");
+
+// explorer
+const sel = document.getElementById("qtype");
+Object.keys(D.by_qtype).forEach(t => sel.insertAdjacentHTML("beforeend", `<option value="${t}">${t.replace("_", "-")}</option>`));
+const btn = document.getElementById("disagree"); const search = document.getElementById("search");
+let open = null;
+function verdictChip(x) { return x ? `<span class="chip ${x.verdict === "PASS" ? "pass" : "fail"}">${x.verdict === "PASS" ? "✓" : "✗"}</span>` : ""; }
+function traceHTML(q) {
+  return `<div class="trace">` + (q.trace || []).map(s => `<div class="step"><span class="n">${s.n}</span><div><div><span class="who">${esc(s.agent)}</span> <span class="meta">${esc(s.action)} · ${s.ms} ms${s.tok ? " · " + fmt(s.tok) + " tok" : ""}${s.found === false ? " · nothing found" : ""}</span></div>` +
+    (s.why ? `<div class="muted">Plan: ${esc(s.why)}</div>` : "") + (Object.keys(s.args || {}).length ? `<div class="meta">${esc(JSON.stringify(s.args))}</div>` : "") +
+    `<div class="obs">${esc(s.obs)}</div></div></div>`).join("") + `</div>`;
+}
+function renderQ() {
+  const t = sel.value, dis = btn.getAttribute("aria-pressed") === "true", s = search.value.toLowerCase();
+  const rows = D.per_question.filter(q => (!t || q.qtype === t) && (!s || q.question.toLowerCase().includes(s)) &&
+    (!dis || new Set(P.map(p => q[p[0]]?.verdict)).size > 1));
+  document.getElementById("qcount").textContent = `${rows.length} questions`;
+  document.getElementById("qtable").innerHTML = `<thead><tr><th>Question</th><th>Gold</th>${P.map(p => `<th>${p[1]}</th>`).join("")}</tr></thead><tbody>` +
+    rows.map(q => `<tr class="qrow" data-q="${q.qid}" tabindex="0" aria-expanded="${open === q.qid}"><td class="qtext"><span class="mono muted" style="font-size:12px">${q.qid} · ${q.qtype}</span><br>${esc(q.question)}</td><td class="ans">${esc(q.gold.join(" | "))}</td>` +
+      P.map(p => { const x = q[p[0]]; return `<td class="ans">${verdictChip(x)} ${esc(x?.answer)}<div class="mono muted" style="font-size:11px">${x ? fmt(x.tokens) + " tok · " + x.llm_calls + " LLM" : ""}</div>` +
+        (x && x.grounded === false && x.grounding && !x.grounding.startsWith("unknown") ? `<div><span class="chip warn" title="${esc(x.grounding)}">${esc(x.grounding.split(":")[0])}</span></div>` : "") +
+        (x?.notes?.length ? `<div class="muted" style="font-size:12px">${esc(x.notes[0])}</div>` : "") + `</td>`; }).join("") + `</tr>` +
+      (open === q.qid ? `<tr><td colspan="${2 + P.length}">${traceHTML(q)}</td></tr>` : "")).join("") + "</tbody>";
+  document.querySelectorAll(".qrow").forEach(r => { const f = () => { open = open === r.dataset.q ? null : r.dataset.q; renderQ(); };
+    r.addEventListener("click", f); r.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); f(); } }); });
+}
+sel.onchange = renderQ; search.oninput = renderQ; btn.onclick = () => { btn.setAttribute("aria-pressed", btn.getAttribute("aria-pressed") === "true" ? "false" : "true"); renderQ(); };
+renderQ();
+
+// hidden
+const H = D.hidden || {};
+if (!Object.keys(H).length) document.getElementById("hiddenSec").hidden = true;
+else document.getElementById("hidden").innerHTML = `<thead><tr><th>Pipeline</th><th class="num">Questions answered</th><th class="num">Tokens / question</th><th class="num">Answered "unknown"</th></tr></thead><tbody>` +
+  P.filter(p => H[p[0]]).map(p => `<tr><td><span class="key"><span class="sw" style="background:${css(p[2])}"></span>${p[1]}</span></td><td class="num">${H[p[0]].n}</td><td class="num">${fmt(H[p[0]].avg_total_tokens)}</td><td class="num">${H[p[0]].unknown_answers}</td></tr>`).join("") + "</tbody>";
+document.getElementById("foot").innerHTML = `Graph: TigerGraph Savanna 4.2, graph OlympicRAG (2,951 documents, 2,162 events, 22,554 chunks with HNSW vectors). LLM: ${esc(D.meta?.model)}; judge: ${esc(D.meta?.judge)}. Active time counts tool and LLM time and leaves out free-tier rate-limit waits. Generated ${esc(D.meta?.generated)}.`;
+</script>

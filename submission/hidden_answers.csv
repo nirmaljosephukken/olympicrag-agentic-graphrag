@@ -1,0 +1,51 @@
+qid,question,rag_answer,rag_tokens,graphrag_answer,graphrag_tokens,agentic_answer,agentic_tokens
+eval-001,Who won the gold medal in the event held at Olympic Tennis Centre on 15 to 22 August 2004?,Nicolás Massú,3024,Li TingSun Tiantian,888,Li Ting and Sun Tiantian,2945
+eval-002,How many nations competed in Fencing at the 1988 Summer Olympics – Men's foil?,29,3072,29,1515,29,2965
+eval-003,"According to the provided corpus, how many cycling events at the 2008 Summer Olympics had more than 30 competitors?",1,3191,6,2997,8,3002
+eval-004,Who won the gold medal in the event held at Sydney International Shooting Centre on 22 September 2000?,Yang Ling,2984,Mariya Grozdeva,2118,Mariya Grozdeva,2951
+eval-005,"According to the provided corpus, which sailing event at the 2016 Summer Olympics had the highest number of competitors?",unknown,2640,Sailing at the 2016 Summer Olympics – Men's 470,2452,Sailing at the 2016 Summer Olympics – Men's 470,3012
+eval-006,"According to the provided corpus, how many cross-country skiing events at the 2010 Winter Olympics had more than 62 competitors?",unknown,2669,3,2264,4,2990
+eval-007,Who won the gold medal in the men's heavyweight boxing event at the Summer Olympics held immediately before 2016?,Odlanier Solis,3094,unknown,2626,Oleksandr Usyk,3025
+eval-008,"According to the provided corpus, how many sailing events at the 1996 Summer Olympics had more than 46 competitors?",2,2582,4,1981,4,2959
+eval-009,"According to the provided corpus, which sailing event at the 2004 Summer Olympics had the highest number of competitors?",Sailing at the 2004 Summer Olympics – Yngling,2803,Sailing at the 2004 Summer Olympics – Men's 470,2285,Sailing at the 2004 Summer Olympics – Men's 470,2990
+eval-010,How many nations competed in Boxing at the 1996 Summer Olympics – Flyweight?,32,2738,32,669,32,2997
+eval-011,"According to the provided corpus, how many weightlifting events at the 1992 Summer Olympics had more than 24 competitors?",unknown,3048,3,2228,4,2967
+eval-012,How many nations competed in Swimming at the 2016 Summer Olympics – Men's 100 metre butterfly?,32,3088,32,1400,32,2952
+eval-013,"According to the provided corpus, how many cycling events at the 2016 Summer Olympics had more than 27 competitors?",2,3033,5,2425,6,3031
+eval-014,"Who won the gold medal in the event held at San Sicario on February 15, 2006?",Michaela Dorfmeister,3446,Michaela Dorfmeister,1374,Michaela Dorfmeister,2906
+eval-015,How many nations competed in Athletics at the 2016 Summer Olympics – Men's 400 metres?,35,3410,35,1531,35,3053
+eval-016,How many nations competed in Athletics at the 2008 Summer Olympics – Women's shot put?,22,2726,22,2646,22,3040
+eval-017,Who won the gold medal in the event held at Eton Dorney on 28 July – 4 August 2012?,"Alex Gregory, Tom James, Pete Reed, Andrew Triggs Hodge",4019,Miroslava Knapková,2162,Miroslava Knapková,2944
+eval-018,Who won the gold medal in the event held at Olympic Stadium on 16–18 August 2016?,unknown,2750,Sara Kolak,1446,Sara Kolak,2951
+eval-019,"According to the provided corpus, how many alpine skiing events at the 1998 Winter Olympics had more than 45 competitors?",unknown,2703,3,1816,4,2956
+eval-020,Who won the gold medal in the event held at Royal Artillery Barracks on 5 August 2012?,Jin Jong-oh,3255,Jin Jong-oh,1512,Jin Jong-oh,2913
+eval-021,Who won the gold medal in the men's 200 metre backstroke swimming event at the Summer Olympics held immediately before 2016?,Tyler Clary,3219,unknown,4014,Tyler Clary,3090
+eval-022,How many nations competed in Cross-country skiing at the 2014 Winter Olympics – Men's sprint?,40,3152,40,1566,40,3042
+eval-023,"According to the provided corpus, how many shooting events at the 2000 Summer Olympics had more than 42 competitors?",unknown,3492,6,2768,7,3067
+eval-024,"According to the provided corpus, which cross-country skiing event at the 1998 Winter Olympics had the highest number of competitors?",unknown,2710,Cross-country skiing at the 1998 Winter Olympics – Men's 10 kilometre classical,1989,Cross-country skiing at the 1998 Winter Olympics – Men's 10 kilometre classical,3064
+eval-025,"According to the provided corpus, which rowing event at the 2016 Summer Olympics had the highest number of competitors?",unknown,3108,Rowing at the 2016 Summer Olympics – Women's eight,2403,Rowing at the 2016 Summer Olympics – Women's eight,3032
+eval-026,How many nations competed in Fencing at the 2000 Summer Olympics – Men's foil?,22,3024,22,1440,22,3010
+eval-027,"According to the provided corpus, which cycling event at the 2012 Summer Olympics had the highest number of competitors?",Cycling at the 2012 Summer Olympics – Men's individual road race,3194,Cycling at the 2012 Summer Olympics – Men's individual road race,2842,Cycling at the 2012 Summer Olympics – Men's individual road race,3057
+eval-028,"According to the provided corpus, how many wrestling events at the 2012 Summer Olympics had more than 19 competitors?",0,3389,3,2823,3,3097
+eval-029,"According to the provided corpus, how many boxing events at the 2012 Summer Olympics had more than 26 competitors?",unknown,2936,4,2323,3,3011
+eval-030,"According to the provided corpus, which alpine skiing event at the 1994 Winter Olympics had the highest number of competitors?",Alpine skiing at the 1994 Winter Olympics – Men's slalom,2573,Alpine skiing at the 1994 Winter Olympics – Men's super-G,1860,Alpine skiing at the 1994 Winter Olympics – Men's super-G,2996
+eval-031,Who won the gold medal in the men's 62 kg weightlifting event at the Summer Olympics held immediately before 2016?,Zhang Xiangxiang,2934,unknown,2837,Kim Un-guk,3066
+eval-032,"Who won the gold medal in the event held at Pacific Coliseum on February 20, 2010?",Zhou Yang,3216,Zhou Yang,2329,Zhou Yang,4798
+eval-033,"According to the provided corpus, how many alpine skiing events at the 1988 Winter Olympics had more than 57 competitors?",unknown,2788,4,1742,4,2936
+eval-034,Who won the gold medal in the men's freestyle 120 kg wrestling event at the Summer Olympics held immediately before 2012?,Bakhtiyar Akhmedov,3559,unknown,2810,Bakhtiyar Akhmedov,3060
+eval-035,"According to the provided corpus, which rowing event at the 2012 Summer Olympics had the highest number of competitors?",unknown,3260,Rowing at the 2012 Summer Olympics – Women's eight,2636,Rowing at the 2012 Summer Olympics – Women's eight,3013
+eval-036,"According to the provided corpus, how many short-track speed skating events at the 2018 Winter Olympics had more than 34 competitors?",unknown,2820,3,2576,3,3021
+eval-037,"According to the provided corpus, which sailing event at the 1996 Summer Olympics had the highest number of competitors?",Sailing at the 1996 Summer Olympics – Laser,2477,Sailing at the 1996 Summer Olympics – Men's 470,1957,Sailing at the 1996 Summer Olympics – Men's 470,2982
+eval-038,"According to the provided corpus, how many athletics events at the 2008 Summer Olympics had more than 40 competitors?",0,3505,15,5138,21,3341
+eval-039,"According to the provided corpus, how many boxing events at the 1992 Summer Olympics had more than 30 competitors?",0,2554,0,2095,3,2969
+eval-040,Who won the gold medal in the event held at Stadium Australia on 27 September 2000 (heats)29 September 2000 (semi-finals)30 September 2000 (final)?,Nouria Mérah-Benida,3470,Nouria Mérah-Benida,1657,Nouria Mérah-Benida,3106
+eval-041,"According to the provided corpus, how many alpine skiing events at the 2006 Winter Olympics had more than 63 competitors?",1,2822,3,2093,4,2953
+eval-042,Who won the gold medal in the mixed trap shooting event at the Summer Olympics held immediately before 1992?,Dmitry Monakov,3464,unknown,2435,Dmitry Monakov,3037
+eval-043,Who won the gold medal in the event held at Carioca Arena 3 on 11 August 2016?,unknown,3035,Loredana DinuSimona GhermanSimona PopAna Maria Popescu,1287,"Loredana Dinu, Simona Gherman, Simona Pop, Ana Maria Popescu",2959
+eval-044,Who won the gold medal in the women's 75 kg weightlifting event at the Summer Olympics held immediately before 2016?,Alla Vazhenina,3470,unknown,2973,Lydia Valentín,6903
+eval-045,Who won the gold medal in the women's moguls freestyle skiing event at the Winter Olympics held immediately before 2014?,Hannah Kearney,3051,unknown,2277,Hannah Kearney,3033
+eval-046,Who won the gold medal in the light flyweight boxing event at the Summer Olympics held immediately before 2004?,Brahim Asloum,3050,unknown,2204,Brahim Asloum,15877
+eval-047,"According to the provided corpus, which cycling event at the 2004 Summer Olympics had the highest number of competitors?",Cycling at the 2004 Summer Olympics – Men's points race,3279,Cycling at the 2004 Summer Olympics – Men's individual road race,2079,Cycling at the 2004 Summer Olympics – Men's individual road race,2963
+eval-048,"According to the provided corpus, how many cycling events at the 2012 Summer Olympics had more than 30 competitors?",1,3098,6,2870,7,3024
+eval-049,"According to the provided corpus, which shooting event at the 1988 Summer Olympics had the highest number of competitors?",Shooting at the 1988 Summer Olympics – Men's 50 metre rifle three positions,3220,Shooting at the 1988 Summer Olympics – Men's 50 metre rifle prone,2262,Shooting at the 1988 Summer Olympics – Men's 50 metre rifle prone,3057
+eval-050,Who won the gold medal in the event held at Olympic Stadium on 6–9 August at the 2012 Summer Olympics?,Maryam Yusuf Jamal,2753,David Rudisha,1515,David Rudisha,2979

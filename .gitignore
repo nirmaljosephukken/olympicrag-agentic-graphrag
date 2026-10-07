@@ -1,0 +1,7 @@
+.env
+.tg_token
+__pycache__/
+*.pyc
+build/
+data/corpus/
+*.log

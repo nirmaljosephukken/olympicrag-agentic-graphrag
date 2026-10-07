@@ -1,0 +1,136 @@
+USE GRAPH OlympicRAG
+
+// ---------- similarity search (native HNSW vector index) ----------
+CREATE OR REPLACE QUERY chunk_search(LIST<FLOAT> qv, INT k) FOR GRAPH OlympicRAG SYNTAX v3 {
+  MapAccum<VERTEX, FLOAT> @@dist;
+  R = vectorSearch({Chunk.emb}, qv, k, {distance_map: @@dist});
+  PRINT R[R.id AS id, R.doc_id AS doc_id, R.text AS text] AS hits;
+  PRINT @@dist AS distances;
+}
+
+// GraphRAG: vector search restricted to the chunks of graph-selected documents
+CREATE OR REPLACE QUERY chunk_search_in_docs(LIST<FLOAT> qv, SET<STRING> doc_ids, INT k) FOR GRAPH OlympicRAG SYNTAX v3 {
+  MapAccum<VERTEX, FLOAT> @@dist;
+  D = {Doc.*};
+  D = SELECT d FROM D:d WHERE d.id IN doc_ids;
+  C = SELECT c FROM D:d -(HAS_CHUNK)- Chunk:c;
+  R = vectorSearch({Chunk.emb}, qv, k, {candidate_set: C, distance_map: @@dist});
+  PRINT R[R.id AS id, R.doc_id AS doc_id, R.text AS text] AS hits;
+  PRINT @@dist AS distances;
+}
+
+// ---------- document retrieval ----------
+CREATE OR REPLACE QUERY doc_chunks(STRING doc_id, INT max_idx) FOR GRAPH OlympicRAG {
+  S = {Doc.*};
+  S = SELECT d FROM S:d WHERE d.id == doc_id;
+  C = SELECT c FROM S:d -(HAS_CHUNK)- Chunk:c WHERE c.idx <= max_idx ORDER BY c.idx ASC;
+  PRINT S[S.title AS title, S.url AS url, S.kind AS kind] AS doc;
+  PRINT C[C.idx AS idx, C.text AS text] AS chunks;
+}
+
+// ---------- structured event search over the graph ----------
+// Empty string / -1 means "no filter". Matching uses normalised (lower-case, accent/dash-free) attributes.
+CREATE OR REPLACE QUERY find_events(STRING sport_norm, INT year, STRING season, STRING venue_norm,
+                                    STRING date_norm, STRING event_norm, INT lim) FOR GRAPH OlympicRAG {
+  SetAccum<VERTEX<Event>> @@out;
+  G = {Games.*};
+  IF year > 0 THEN
+    G = SELECT g FROM G:g WHERE g.year == year AND (season == "" OR g.season == season);
+  END;
+  E = SELECT e FROM G:g -(IN_GAMES)- Event:e
+      WHERE (sport_norm == "" OR e.sport_norm == sport_norm)
+        AND (venue_norm == "" OR e.venue_norm LIKE "%" + venue_norm + "%")
+        AND (date_norm == "" OR e.date_norm LIKE "%" + date_norm + "%")
+        AND (event_norm == "" OR e.event_norm LIKE "%" + event_norm + "%")
+        AND (season == "" OR e.season == season)
+      LIMIT lim;
+  PRINT E[E.title AS title, E.sport AS sport, E.year AS year, E.season AS season, E.venue AS venue,
+          E.date_text AS date, E.competitors AS competitors, E.nations AS nations, E.gold AS gold] AS events;
+}
+
+// Venue-centred lookup: Venue -> events held there (multi-hop: venue + date -> event -> medallist)
+CREATE OR REPLACE QUERY events_at_venue(STRING venue_norm, STRING date_norm, INT year) FOR GRAPH OlympicRAG {
+  V = {Venue.*};
+  V = SELECT v FROM V:v WHERE v.id LIKE "%" + venue_norm + "%";
+  E = SELECT e FROM V:v -(AT_VENUE)- Event:e
+      WHERE (date_norm == "" OR e.date_norm LIKE "%" + date_norm + "%") AND (year <= 0 OR e.year == year);
+  PRINT V[V.name AS name] AS venues;
+  PRINT E[E.title AS title, E.year AS year, E.date_text AS date, E.gold AS gold, E.gold_noc AS gold_noc] AS events;
+}
+
+// Full neighbourhood of one event: games, venue, medallists, nations, previous / next edition
+CREATE OR REPLACE QUERY event_profile(STRING eid) FOR GRAPH OlympicRAG {
+  SetAccum<STRING> @@prev, @@next;
+  ListAccum<STRING> @@medals;
+  S = {Event.*};
+  S = SELECT e FROM S:e WHERE e.id == eid;
+  P = SELECT p FROM S:e -(PREV_EDITION>)- Event:p ACCUM @@prev += p.id + " | " + p.title;
+  N = SELECT n FROM S:e -(NEXT_EDITION>)- Event:n ACCUM @@next += n.id + " | " + n.title;
+  A = SELECT a FROM S:e -(WON_MEDAL:w)- Athlete:a ACCUM @@medals += w.medal + ": " + a.name;
+  PRINT S AS event;
+  PRINT @@medals AS medallists, @@prev AS previous_edition, @@next AS next_edition;
+}
+
+// Temporal hop along the edition chain (direction "prev" or "next"), `hops` steps
+CREATE OR REPLACE QUERY edition_hop(STRING eid, STRING direction, INT hops) FOR GRAPH OlympicRAG {
+  S = {Event.*};
+  S = SELECT e FROM S:e WHERE e.id == eid;
+  FOREACH i IN RANGE[1, hops] DO
+    IF direction == "prev" THEN
+      S = SELECT p FROM S:e -(PREV_EDITION>)- Event:p;
+    ELSE
+      S = SELECT n FROM S:e -(NEXT_EDITION>)- Event:n;
+    END;
+  END;
+  PRINT S[S.title AS title, S.year AS year, S.venue AS venue, S.date_text AS date, S.gold AS gold,
+          S.silver AS silver, S.bronze AS bronze, S.competitors AS competitors, S.nations AS nations] AS events;
+}
+
+// Graph-native aggregation: count / rank events of a sport at one Games by competitor numbers
+CREATE OR REPLACE QUERY aggregate_events(STRING sport_norm, INT year, STRING season, INT threshold) FOR GRAPH OlympicRAG {
+  SumAccum<INT> @@over, @@total, @@missing;
+  MaxAccum<INT> @@max_c;
+  SetAccum<STRING> @@argmax;
+  G = {Games.*};
+  G = SELECT g FROM G:g WHERE g.year == year AND g.season == season;
+  E = SELECT e FROM G:g -(IN_GAMES)- Event:e WHERE e.sport_norm == sport_norm
+      ACCUM @@total += 1,
+            IF e.competitors < 0 THEN @@missing += 1 END,
+            IF e.competitors > threshold THEN @@over += 1 END,
+            @@max_c += e.competitors;
+  M = SELECT e FROM E:e WHERE e.competitors == @@max_c AND @@max_c >= 0 ACCUM @@argmax += e.title;
+  PRINT @@total AS events_found, @@over AS over_threshold, @@max_c AS max_competitors,
+        @@argmax AS max_events, @@missing AS events_without_count;
+  PRINT E[E.title AS title, E.competitors AS competitors] AS events;
+}
+
+// Athlete -> events they medalled in
+CREATE OR REPLACE QUERY athlete_medals(STRING name_like) FOR GRAPH OlympicRAG {
+  A = {Athlete.*};
+  A = SELECT a FROM A:a WHERE a.id LIKE "%" + name_like + "%" LIMIT 20;
+  E = SELECT e FROM A:a -(WON_MEDAL:w)- Event:e;
+  PRINT A[A.name AS name] AS athletes;
+  PRINT E[E.title AS title, E.gold AS gold, E.silver AS silver, E.bronze AS bronze] AS events;
+}
+
+// Catalogue for entity linking (sports, venues, games)
+CREATE OR REPLACE QUERY catalog() FOR GRAPH OlympicRAG {
+  S = {Sport.*};
+  V = {Venue.*};
+  G = {Games.*};
+  PRINT S[S.name AS name] AS sports, V[V.name AS name] AS venues, G[G.year AS year, G.season AS season] AS games;
+}
+
+// Reasoning over time: every version of an event's facts and which supersedes which
+CREATE OR REPLACE QUERY event_claims(STRING eid) FOR GRAPH OlympicRAG {
+  SetAccum<STRING> @@supersedes;
+  S = {Event.*};
+  S = SELECT e FROM S:e WHERE e.id == eid;
+  C = SELECT c FROM S:e -(HAS_CLAIM)- Claim:c;
+  X = SELECT c FROM C:c -(SUPERSEDES>)- Claim:o ACCUM @@supersedes += c.id + " > " + o.id;
+  PRINT S[S.title AS title] AS event;
+  PRINT C AS claims;
+  PRINT @@supersedes AS supersedes;
+}
+
+INSTALL QUERY ALL
