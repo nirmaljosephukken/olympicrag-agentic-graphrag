@@ -1,6 +1,6 @@
 # OlympicRAG: when does a question need an agent?
 
-*Agentic GraphRAG Hackathon, Round 1 · Amal Francis V Ukken*
+*Agentic GraphRAG Hackathon, Round 1 · Nirmal Joseph*
 
 ## What we built
 

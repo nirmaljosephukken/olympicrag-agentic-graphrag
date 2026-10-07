@@ -10,7 +10,7 @@ Three pipelines answer the same questions over the same TigerGraph graph with th
 | **GraphRAG** | entity linking → fixed graph retrieval + 1-hop expansion → graph-scoped vector search → answer | 1 |
 | **Agentic GraphRAG** | an orchestrator LLM picks one specialised agent at a time based on the evidence so far, an evidence evaluator checks grounding before it may stop | 2–8 |
 
-Built by Amal Francis V Ukken for the TigerGraph **Agentic GraphRAG Hackathon** (Round 1) on the provided corpus: 2,951 Wikipedia articles (Olympic events 1988–2022, plus films and people), 100 public and 50 hidden questions, plus three sets of our own: 36 harder multi-step questions, 18 reasoning-over-time questions (conflicting and superseded facts) and 12 questions about films that are not in the graph.
+Built by Nirmal Joseph for the TigerGraph **Agentic GraphRAG Hackathon** (Round 1) on the provided corpus: 2,951 Wikipedia articles (Olympic events 1988–2022, plus films and people), 100 public and 50 hidden questions, plus three sets of our own: 36 harder multi-step questions, 18 reasoning-over-time questions (conflicting and superseded facts) and 12 questions about films that are not in the graph.
 
 ![Architecture](docs/architecture.png)
 
@@ -311,7 +311,7 @@ docs/               architecture diagram, demo script, writeup and social post
 
 ## Author and data
 
-Built by **Amal Francis V Ukken** for the TigerGraph Agentic GraphRAG Hackathon (Round 1).
+Built by **Nirmal Joseph** ([@nirmaljosephukken](https://github.com/nirmaljosephukken)) for the TigerGraph Agentic GraphRAG Hackathon (Round 1).
 
 The corpus, and the article text quoted in `results/` and `submission/` traces, is derived from English Wikipedia and licensed
 [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/); each document carries its source URL. The corpus itself is not
